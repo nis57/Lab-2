@@ -1,0 +1,378 @@
+import java.util.Scanner; //access Scanner
+
+public class Assignment2
+{
+  public static void main (String [] args)
+  {
+    
+      int startLoop = 0;
+      while( startLoop==0)// Loop starts entire program
+      {
+      
+      int storedcard = 0;
+      startLoop = 0;
+      int totalCherrySlices = 0;
+      int cherryPies = 0;
+      int cherrySlices = 0;
+      int plainPizzas = 0;
+      int pepperoniPizzas = 0;
+      int piCharms = 0;
+      double piCharmsCost = 0;
+      double pepperoniPizzaCost = 0;
+      double plainPizzaCost = 0;
+      double cherrySlicesCost = 0;
+      double cherryPiesCost = 0;
+      int orderLoop = 0;
+      int paymentLoop = 0; 
+      int cardLoop = 0;
+      int customerLoop = 0;
+		//Resets all variables to 0 after multiple runs    
+        Scanner customerScan = new Scanner(System.in);
+        int customerLine = 0;
+        System.out.println("Welcome to Pies, Pies, and Pi's");
+        
+         while(customerLoop == 0) //loop asks if customer is in line
+         {
+          System.out.println("Is there a customer in line? (1 = yes, 2 = no)"); 
+          customerLine = customerScan.nextInt(); //asks if a customer is in line and takes answer
+        
+           if(customerLine == 1)
+           {
+             //fill in with rest of codes starting with the card carry question
+             cardLoop = 0;
+             while(cardLoop == 0)//loop asks if they have a pie card
+             {
+             Scanner cardScan = new Scanner(System.in);
+             System.out.println("Do you have a Pie card? (1 = yes, 2 = no)");
+             int card = cardScan.nextInt();
+             storedcard = card; /*storedcard used so that later in program, the program can know 
+             whether the customer has a Pie card or not*/
+          
+              if(card == 1)
+              {
+               cardLoop = 1; //won't ask if they have a pie card again
+               customerLoop = 1; //won't ask if there's a customer in line again
+              //display discount Pie card prices
+               System.out.println("Welcome Back, Pie card holder!");
+               System.out.println("You will recieve:");
+               System.out.println("Pepperoni pizza for the same price as plain pizza");
+               System.out.println("$0.25 off a slice of cherry pie");
+               System.out.println("$2.00 off a whole cherry pie");
+               System.out.println("$10.00 off each Pi charm");
+               System.out.println("Extra 10% off entire order");
+              }
+              else if(card == 2)
+              {
+                //just goes to order options
+                cardLoop = 1;//won't ask if they have a pie card again
+                customerLoop = 1;//won't ask if there is a customer in line again
+                
+              }
+              else
+              {
+               cardLoop = 0; //if the user types invalid response, then loop continues and user is prompted again 
+              }
+             }//cardLoop ends here 
+           }  
+           else if(customerLine == 2)
+           {
+            customerLoop = 1;//exits out of customerLoop
+            startLoop = 1; //exits out of the welcomeLoop 
+            orderLoop = 1;//exits out of orderLoop
+            paymentLoop = 1;
+                        
+           } 
+           else
+           {
+            customerLoop = 0; //if user types invalid int then it asks the question again
+           }
+         }//customerLoop ends here
+       /*after asking whether they have a card the code will go to this block 
+        * and ask the user what they want to order*/
+         
+         while(orderLoop == 0)
+         {
+         System.out.println("Please choose an option:");
+         System.out.println("1) Update Pizza Order");
+         System.out.println("2) Update Cherry Pie Order");
+         System.out.println("3) Update Charm Order");
+         System.out.println("4) Check Out");
+           
+         Scanner orderScan = new Scanner(System.in);
+         int order = orderScan.nextInt();
+         
+         if(order == 1)
+         {
+          //update pizza order 
+        
+           if(plainPizzas == 0 && pepperoniPizzas == 0)//Displays that  nothing is ordered
+           {
+             System.out.println("Here is your current order");
+             System.out.println("No pizzas ordered");
+           }
+           else if(plainPizzas > 0 && pepperoniPizzas == 0)//Displays plain pizzas
+           {
+             System.out.println("Here is your current order:");
+             System.out.println( plainPizzas + " plain pizza(s)");
+           }
+           else if(plainPizzas == 0 && pepperoniPizzas > 0) //Displays pepperoni pizzas
+           {
+            System.out.println("Here is your current order:"); 
+            System.out.println( pepperoniPizzas + " pepperoni pizza(s)");
+           }
+           else if(plainPizzas > 0 && pepperoniPizzas > 0) //displays current order
+           {
+            System.out.println("Here is your current order:"); 
+            System.out.println( pepperoniPizzas + " pepperoni pizza(s) and " + plainPizzas + " plain pizza(s)");
+           }
+          
+           if(storedcard == 1)//if they have a card it'll offer the discount options
+           {
+           System.out.println("How many plain pizzas would you like for $10.00?");
+           Scanner plainScan = new Scanner(System.in);
+           plainPizzas = plainScan.nextInt();
+           
+           System.out.println("How many pepperoni pizzas would you like for $10.00?");
+           Scanner pepperoniScan = new Scanner(System.in);
+           pepperoniPizzas = pepperoniScan.nextInt();
+           }//has pie card
+           else if(storedcard == 2)//if they don't have a pie card it will offer regular options
+           {
+           System.out.println("How many plain pizzas would you like for $10.00?");
+           Scanner plainScan = new Scanner(System.in);
+           plainPizzas = plainScan.nextInt();
+           
+           System.out.println("How many pepperoni pizzas would you like for $12.00?");
+           Scanner pepperoniScan = new Scanner(System.in);
+           pepperoniPizzas = pepperoniScan.nextInt();
+           }//doesn't have pie card
+           orderLoop = 0; //returns back to order option menu
+         }//order == 1
+         else if(order == 2)
+         {
+          //update cherry pie order 
+           
+           if(totalCherrySlices <= 0 )//if they haven't ordered anything it'll say nothing ordered
+           {
+             System.out.println("Here is your current order");
+             System.out.println("No cherry pie slice(s) ordered");
+           }
+           else if(totalCherrySlices > 0)// if the total amount of slices is > 0 then it'll go into this sequence of if statements
+           {
+             if(cherrySlices > 0 && cherryPies == 0) //if they only have slices ordered (less than 6 slices) will display how many ordered
+             {
+             System.out.println("Here is your current order:");
+             System.out.println( cherrySlices + " slice(s) of cherry pie");
+             }
+             if(cherrySlices == 0 && cherryPies > 0)//if they only have whole pies ordered will display how many ordered
+             {
+             System.out.println("Here is your current order:");
+             System.out.println( cherryPies + " whole cherry pies");
+             }
+             if(cherrySlices > 0 && cherryPies > 0)// if they have whole pies and slices orderd it will display how many ordered
+             {
+             System.out.println("Here is your current order:");
+             System.out.println( cherryPies + " whole cherry pies and " + cherrySlices + " slices of cherry pie");
+             }
+            /*this series of if then statements are used to display the currently stored order
+             * of cherry pies and depending on whether there are whole pies, slices, or both
+             * it'll display a certain statement to the user*/            
+           }
+             if(storedcard == 1)//if they have a Pie card it'll offer discount 
+           {
+           System.out.println("How many cherry slices would you like for:");
+           System.out.println("$1.75 per slice");
+           System.out.println("$8.00 per pie (6 slices)");
+           
+           Scanner cherryScan = new Scanner(System.in);
+           totalCherrySlices = cherryScan.nextInt();
+           
+          cherryPies = totalCherrySlices/6;//converts slices of pie into whole pies
+          cherrySlices = totalCherrySlices%6;
+           }//has pie card
+             if(storedcard == 2)//if they don't have a pie card it'll offer normal prices
+           {
+           System.out.println("How many cherry slices would you like for:");
+           System.out.println("$2.00 per slice");
+           System.out.println("$10.00 per pie (6 slices)");
+           
+           Scanner cherryScan = new Scanner(System.in);
+           totalCherrySlices = cherryScan.nextInt();
+           
+           cherryPies = totalCherrySlices/6;//converts total slices of pie into whole pies
+           cherrySlices = totalCherrySlices%6;
+           }//doesn't have pie card
+    
+         }//cherry pie order
+         else if(order == 3)
+         {
+          //update charm order 
+          if(piCharms == 0)//if they don't have any charms ordered it'll say nothing ordered
+          {
+           System.out.println("Here is your current order:"); 
+           System.out.println("No gold Pi charms ordered"); 
+          }
+          else if(piCharms > 0)//if there are already charms ordered it will display amount ordered
+          {
+           System.out.println("Here is your current order:"); 
+           System.out.println( piCharms + " gold Pi charms");
+          }
+          if(storedcard == 1)// if they have pie card discount prices will be offered
+          {
+          System.out.println("How many gold Pi charms would for $45?");
+          Scanner charmScan = new Scanner(System.in);
+          piCharms = charmScan.nextInt();
+          }//has Pie card
+          if(storedcard == 2)//if they don't have a pie card normal prices offered
+          {
+          System.out.println("How many gold Pi charms would for $50?");
+          Scanner charmScan = new Scanner(System.in);
+          piCharms = charmScan.nextInt();
+          }//doesn't have Pie card
+         }//charm order
+         else if(order == 4)
+         {
+           //check out 
+           System.out.println("Here is your subtotal:");
+           System.out.println("");//empty line
+           
+           if(cherrySlices > 0 && storedcard == 1)//displays cherry slice order with pie card discount
+           {
+            double cherrySlicesCost = cherrySlices*1.75;
+            String cherrySlicePrint = cherrySlices + " cherry pie slice(s) at $1.75 each:";
+            System.out.printf("\t%-50s %-10s\n", cherrySlicePrint, String.format("$%.2f", cherrySlicesCost));
+            cherrySlicesCost = cherrySlicesCost;
+           }
+           else if(cherrySlices > 0 && storedcard == 2)//displays cherry slice order without discount
+           {
+            double cherrySlicesCost = cherrySlices*2.00;
+            String cherrySlicePrint = cherrySlices + " cherry pie slice(s) at $2.00 each:";
+            System.out.printf("\t%-50s %-10s\n", cherrySlicePrint, String.format("$%.2f", cherrySlicesCost));
+            cherrySlicesCost = cherrySlicesCost;
+           }
+           if(cherryPies > 0 && storedcard == 1)//display whole pie order with discount
+           {
+            double cherryPiesCost = cherryPies*8.00;
+            String cherryPiesPrint = cherryPies + " whole cherry pie(s) at $8.00 each:";
+            System.out.printf("\t%-50s %-10s\n", cherryPiesPrint, String.format("$%.2f", cherryPiesCost));
+            cherryPiesCost = cherryPiesCost;
+           }
+           else if(cherryPies > 0 && storedcard == 2)//displays whole pie order without discount
+           {
+            double cherryPiesCost = cherryPies*10.00;
+            String cherryPiesPrint = cherryPies + " whole cherry pie(s) at $10.00 each:";
+            System.out.printf("\t%-50s %-10s\n", cherryPiesPrint, String.format("$%.2f", cherryPiesCost));
+            cherryPiesCost= cherryPiesCost;
+           }
+           if(plainPizzas > 0)//display plain pizza order which is the same with or without pie card
+           {
+            double plainPizzasCost = plainPizzas*10.00;
+            String plainPizzasPrint = plainPizzas + " plain pizzas at $10.00 each:";
+            System.out.printf("\t%-50s %-10s\n", plainPizzasPrint, String.format("$%.2f", plainPizzasCost));
+            plainPizzaCost = plainPizzasCost;
+           }
+           if(pepperoniPizzas > 0 && storedcard == 1)//displays pepperoni pizza order with discount
+           {
+            double pepperoniPizzasCost = pepperoniPizzas*10.00;
+            String pepperoniPizzasPrint = pepperoniPizzas + " pepperoni pizza(s) at $10.00 each:";
+            System.out.printf("\t%-50s %-10s\n", pepperoniPizzasPrint, String.format("$%.2f", pepperoniPizzasCost));
+            pepperoniPizzaCost = pepperoniPizzasCost;
+           }
+           else if(pepperoniPizzas > 0 && storedcard == 2)//display pepperoni pizza order without discount
+           {
+            double pepperoniPizzasCost = pepperoniPizzas*12.00;
+            String pepperoniPizzasPrint = pepperoniPizzas + " pepperoni pizza(s) at $12.00 each:";
+            System.out.printf("\t%-50s %-10s\n", pepperoniPizzasPrint, String.format("$%.2f", pepperoniPizzasCost));
+            pepperoniPizzaCost = pepperoniPizzasCost;
+           }
+           if(piCharms > 0 && storedcard == 1)
+           {            
+            double piCharmsCost = piCharms*45.00;
+            String piCharmsPrint = piCharms + " 14 K gold Pi charm(s) at $45.00 each:";
+            System.out.printf("\t%-50s %-10s\n", piCharmsPrint, String.format("$%.2f", piCharmsCost));
+            piCharmsCost = piCharmsCost;
+           }
+           else if(piCharms > 0 && storedcard == 2)//displays charm order without discount
+           {
+            double piCharmsCost = piCharms*50.00;
+            String piCharmsPrint = piCharms + " 14 K gold Pi charm(s) at $50.00 each:";
+            System.out.printf("\t%-50s %-10s\n", piCharmsPrint, String.format("$%.2f", piCharmsCost)); 
+            piCharmsCost = piCharmsCost;
+           }
+           System.out.println("----------------------------------------------------------------------------------------");
+           orderLoop = 1; //exits orderLoop
+           
+           
+           double subtotal = piCharmsCost + plainPizzaCost + pepperoniPizzaCost + cherrySlicesCost + cherryPiesCost;//adds prices of entire order
+           
+           if(subtotal == 0)
+           {
+             System.out.println("No items purchased! Thanks anyway for stopping");
+           }
+           else
+           {
+           String subtotalPrint = "Subtotal: ";
+           
+           
+           String taxPrint = "Tax: ";
+           double tax = subtotal * .07;//tax calculated
+             
+           String totalPrint = "Total: ";
+           double total = subtotal + tax;//sums tax and subtotal for total
+           
+           if(storedcard == 1)
+           {
+            total = total * 0.9;
+           }//takes of 10% from order if they have a pie card
+           if(storedcard == 2)
+           {
+          //No discount due to no pie card
+           }         
+           
+           String paymentPrint = "Please enter your payment amount: ";
+           String changePrint = "Your change: ";
+           
+           System.out.printf("\t%-50s %-10s\n", subtotalPrint, String.format("$%.2f", subtotal)); //these format the tax and subtotals and totals
+           System.out.printf("\t%-50s %-10s\n", taxPrint, String.format("$%.2f", tax));
+           System.out.println("---------------------------------------------------------------------------------------");
+           System.out.printf("\t%-50s %-10s\n", totalPrint, String.format("$%.2f", total));
+           System.out.println("");
+           System.out.println("");
+           System.out.println("");
+           
+           paymentLoop = 0;
+           while(paymentLoop == 0)//loop to collect payment will repeat until adequate amount is collected
+           {
+           System.out.println(paymentPrint);
+           Scanner paymentScan = new Scanner(System.in);
+           double payment = paymentScan.nextDouble();//scans in the payment from the user
+          
+           if(payment > total || payment == total)//if the payment is adequate change will be given back
+           {
+            double change = payment - total;
+            System.out.printf("\t%-50s %-10s\n", changePrint, String.format("$%.2f", change));
+            paymentLoop = 1;
+           }
+           else//if change isn't adequate then it'll ask for payment again
+           {
+            System.out.println("I'm sorry, but the payment you gave is not sufficient, please give sufficient funds.");
+            paymentLoop = 0;
+           }
+           
+           }//paymentLoop
+           System.out.println("Thank you for shopping at PP&P!");
+         }
+         }//checkout
+         else
+         {
+          orderLoop = 0; //goes back and asks the order question again if proper int isn't inputted
+         }
+         
+         }//end of orderLoop
+        
+ 
+      
+    
+    }//end of welcomeLoop
+  }
+}
