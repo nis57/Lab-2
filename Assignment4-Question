@@ -1,0 +1,80 @@
+import java.util.Scanner;//
+
+public class Question
+{
+
+	private String question;
+	private int numberOfAnswers;
+	private String[] choices;
+	private int answer;
+	private double attempts;
+	private double correct;
+	private int guess;
+
+	public Question(String q, int noa, String[] ch, int ans, double att, double corr)
+	{
+		question= q;
+		numberOfAnswers = noa;
+		answer = ans;
+		attempts = att;
+		correct = corr;
+
+		choices = new String[numberOfAnswers];
+
+		for(int i = 0; i < numberOfAnswers; i++)
+		{
+			choices[i] = ch[i]; 
+		}//copies array from constructor into choices array
+	}//end of constructor
+
+	public void setAttempts()
+	{
+		attempts++;
+	}
+	public double getAttempt()
+	{
+		return attempts;
+	}
+	public void setCorrect()
+	{
+		correct++;
+	}
+	public double getCorrect()
+	{
+		return correct;
+	}
+	public int getAnswer()
+	{
+		return answer;
+	}
+	public String getQuestion()
+	{
+		return question;
+	}
+	public void setGuess(int g)
+	{
+		guess = g;
+	}
+	public int getGuess()
+	{
+		return guess;
+	}
+	public void printChoices()
+	{
+		for(int i = 0; i < numberOfAnswers; i++)
+		{
+			System.out.println(i + ": " + choices[i]);
+		}
+	}
+	public String getChoice(int c)
+	{
+		return choices[c];
+	}
+	public int getNumberOfAnswers()
+	{
+		return numberOfAnswers;
+	}
+
+
+
+}//end of Question class
