@@ -1,0 +1,238 @@
+import java.util.Scanner; //used to scan information
+import java.util.Random; //used for Die.java
+import java.io.File; //used to make files
+import java.io.PrintWriter; //used to import PrintWriter
+import java.io.IOException; //used to throw PrintWriter exception
+
+
+public class Assig3
+{
+  
+public static void main(String[] args) throws IOException 
+{
+	 
+	 System.out.println("Please enter your first name");
+	 Scanner inScan = new Scanner(System.in);
+	 String firstName = inScan.next(); //this scans in the first name of the new player
+
+	 String lastName;
+	 double money = 0;
+	 int numberOfRounds = 0; 
+	 int roundsWon = 0;
+	 Player p1 = new Player();//creates p1 player object from default constructor
+	 int totalMoneyLoop; //declares loop enterance variable
+	 int gameChoiceLoop; //declares loop enterance variable
+	 int enterBetLoop; //declares loop enterance variable
+
+	 String fileName = firstName + ".txt"; //the file names will be first name of player
+	 File f = new File(fileName); //creates a file name with entered in players first name
+
+	 	if(f.exists() && !f.isDirectory()) //checks if file exists and is not a directory, if it exists it will scan info from txt file
+	 	{
+	 		Scanner profileScan = new Scanner(f); //scans in text file
+	 		
+ 				lastName = profileScan.next(); //scans in players information from the text file
+ 			    firstName = profileScan.next(); 
+ 				money = profileScan.nextDouble();
+ 				numberOfRounds = profileScan.nextInt();
+ 				roundsWon = profileScan.nextInt();
+ 				p1 = new Player(firstName, lastName, money, numberOfRounds, roundsWon); //overwrites default player and creates a player from txt file
+
+ 				 System.out.println("Welcome " + firstName);
+				 System.out.println("Welcome to Over and Under!");	
+				 System.out.println("Here is your current information:");//introduction to the game
+				 System.out.println(p1); //prints player information
+		
+	 	}
+
+	 	else //if file name doesn't exist it manually has user input information
+	 	{
+			 System.out.println("Please enter your last name");
+			 inScan = new Scanner(System.in);
+			 lastName = inScan.next(); //scans in the last name of the new player			 
+			 totalMoneyLoop = 0; 
+				  while(totalMoneyLoop == 0)
+		 			{		
+						 System.out.println("Please enter the total amount of money you would like to use tonight (you can't change this later)");
+						 inScan = new Scanner(System.in);
+						 money = inScan.nextDouble(); //scans in the amount of money to be used for betting
+
+						 	if(money < 0) //if the user inputs a negative money value, it'll loop back and ask again
+						 	{
+						 		totalMoneyLoop = 0; //asks question again
+						 	}
+
+						 	else if(money > 0) //if the user inputs a positive money value, the program continues
+						 	{				 
+							 	 System.out.println("Welcome " + firstName);
+								 System.out.println("Welcome to Over and Under!");
+								 System.out.println("Here is your current information:");//introduction to the game
+
+								 p1 = new Player(firstName, lastName, money); //overwrites default player and creates a player based on input information
+								 System.out.println(p1); //prints player information
+
+								 totalMoneyLoop = 1;
+							}
+					}
+		}
+
+				 	 Die die1 = new Die();
+					 Die die2 = new Die(); //creates the two dice that will be rolled
+
+				 	 String play = "y"; //declared here so that play can be accessed outside of its normal block
+
+					 do{
+
+					 	if(money == 0) //if player is out of money the program exits out of all loops and breaks out of program
+						{
+							System.out.println("We're sorry but you have no more money to play! :((( ");
+							totalMoneyLoop = 1;
+				 			enterBetLoop = 1; //exits all loops in programs
+				 			gameChoiceLoop = 1;
+				 			PrintWriter outputFile = new PrintWriter (fileName); //creates a new File for the updated player information
+					 			outputFile.println(p1.getLastName()); //prints last name into file
+					 			outputFile.println(p1.getFirstName());//print first name into file
+					 			outputFile.println(p1.getMoney());//prints money into file
+					 			outputFile.println(p1.getNumberOfRounds());// prints rounds played into file
+					 			outputFile.println(p1.getRoundsWon());//print rounds won into file
+					 			outputFile.close(); //closes file
+					 			//updates all player info into text file before exiting program
+				 			break; //exits program
+						}
+
+				 		System.out.println("Would you like to play a round? (y/n)");
+				 		play = inScan.next(); //scans in answer to question
+
+
+				 		if(play.equals("y") || play.equals("Y")) //if the player answers yes
+				 		{
+				 			enterBetLoop = 0;
+				 			while(enterBetLoop == 0) //asks how much player wants to bet
+				 				{
+				 					System.out.println("How much would you like to bet? (<= " + money);
+				 					double moneyBet = inScan.nextDouble();
+				 					if(money < moneyBet || moneyBet <= 0) //if the bet is more than they have or a negative number
+				 						{
+				 							enterBetLoop = 0; //invalid bet made, asks how much you want to bet again
+				 						}
+									else if (money >= moneyBet) //if the bet is less than the money they have the game continues
+										{
+											gameChoiceLoop = 0;
+											while(gameChoiceLoop == 0) //asks which game the player wants to player
+											{
+												System.out.println("Select your choice: O(ver), U(nder), S(even)");
+												String gameChoice = inScan.next(); //reads in users choice for game
+
+												if(gameChoice.equals("s") ||gameChoice.equals("S")) //if they choose seven
+												{
+													gameChoiceLoop = 1;
+													enterBetLoop = 1;
+													System.out.println("The dice have been rolled...and the result is...");
+													int dieResult1 = die1.roll(); //die is rolled
+													int dieResult2 = die2.roll(); // die is rolled
+													int rollTotal = dieResult1 + dieResult2; //both dice rolls added together
+													System.out.println("Die 1: " + dieResult1 + " Die 2: " + dieResult2 + " => Total: " + rollTotal); // prints result of rolls and total
+													System.out.println(rollTotal + "!!!!"); 
+
+														if(rollTotal == 7)
+														{
+															System.out.println("You have WON this round!"); // if the player wins they win back 4 times the winnings
+															p1.addMoney(moneyBet * 4); //adds winnings to their player info
+															p1.roundWon(); //increments the rounds won
+															money = p1.getMoney(); //money in this program is updated
+														}
+														else if(rollTotal != 7)
+														{
+															System.out.println("You have LOST this round!");
+															p1.subtractMoney(moneyBet);	//bet money is lost
+															p1.roundLost(); //number of rounds is incremented
+															money = p1.getMoney(); //money in this program is updated
+														}
+												}
+												else if(gameChoice.equals("u") ||gameChoice.equals("U")) // if the player chooses under
+												{
+													gameChoiceLoop = 1;
+													enterBetLoop = 1;
+													System.out.println("The dice have been rolled...and the result is...");
+													int dieResult1 = die1.roll();// die is rolled
+													int dieResult2 = die2.roll(); //die is rolled
+													int rollTotal = dieResult1 + dieResult2; //die rolls are added together
+													System.out.println("Die 1: " + dieResult1 + " Die 2: " + dieResult2 + " => Total: " + rollTotal); //prints results of rolls and total 
+													System.out.println(rollTotal + "!!!!");
+
+														if(rollTotal < 7) //value is less than 7 (over)
+														{
+															System.out.println("You have WON this round!");
+															p1.addMoney(moneyBet); //winnings added to money
+															p1.roundWon();//rounds won incremented
+															money = p1.getMoney();//money in this program updated
+														}
+														else if(rollTotal >= 7)//total greater than or equal to 7
+														{
+															System.out.println("You have LOST this round!");
+															p1.subtractMoney(moneyBet);	 //money bet subtracted from total money
+															p1.roundLost();//number of rounds updated
+															money = p1.getMoney(); //money in this program updated
+														}
+
+												}
+												else if(gameChoice.equals("o") ||gameChoice.equals("O")) //player chooses over
+												{
+													gameChoiceLoop = 1;
+													enterBetLoop = 1;
+													System.out.println("The dice have been rolled...and the result is...");
+													int dieResult1 = die1.roll(); //die roll
+													int dieResult2 = die2.roll(); //die roll
+													int rollTotal = dieResult1 + dieResult2; //total roll value
+													System.out.println("Die 1: " + dieResult1 + " Die 2: " + dieResult2 + " => Total: " + rollTotal); //prints result of rolls and total 
+													System.out.println(rollTotal + "!!!!");
+
+														if(rollTotal > 7) //total greater than 7, player wins
+														{
+															System.out.println("You have WON this round!");
+															p1.addMoney(moneyBet); //winnings added to money
+															p1.roundWon(); //rounds won incremented
+															money = p1.getMoney(); //money in this program updated
+														}
+														else if(rollTotal <= 7) //total less than or equal to 7, player looses
+														{
+															System.out.println("You have LOST this round!");
+															p1.subtractMoney(moneyBet);	//money bet subtracted
+															p1.roundLost();//number of rounds increased
+															money = p1.getMoney(); //money in this program gets updated
+														}
+												}
+												else
+												{
+													gameChoiceLoop = 0; //if they input some other value it goes back to the beginning asks what you entered again
+												}
+											}//end of gameChoiceLoop
+										}//else if (money > bet)									
+				 				}//end of enterBetLoop
+				 		}//yes wants to play round
+				 		else if(play.equals("n") || play.equals("N")) //if the player does not want to play anymore rounds
+				 		{
+				 			System.out.println("Thank you for playing!");
+				 			System.out.println("Here is your update information:");
+				 			System.out.println(p1); //prints player information
+				 			System.out.println("During this game you left with $" + p1.getMoney());//ending money
+				 			System.out.println("During this game you won " + p1.getRoundsWon() + " out of " + p1.getNumberOfRounds() + " total rounds"); //prints rounds won and total rounds
+				 			
+				 			PrintWriter outputFile = new PrintWriter (fileName); //creates a new File for the updated player information
+					 			outputFile.println(p1.getLastName()); //prints last name into file
+					 			outputFile.println(p1.getFirstName());//print first name into file
+					 			outputFile.println(p1.getMoney());//prints money into file
+					 			outputFile.println(p1.getNumberOfRounds());// prints rounds played into file
+					 			outputFile.println(p1.getRoundsWon());//print rounds won into file
+					 			outputFile.close(); //closes file
+					 			//updates player info before exiting program
+				 			totalMoneyLoop = 1;
+				 			enterBetLoop = 1;
+				 			gameChoiceLoop = 1; //exits all loops
+				 		}
+				 			
+
+					 }while(play.equals("y") || play.equals("Y")); //end of do		 
+  }//end of main
+  
+}
