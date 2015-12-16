@@ -1,0 +1,19 @@
+import java.util.Random;
+
+public class Die{
+
+  private int random1; //value of the die
+  private Random die; //die object
+
+    public Die()
+    {
+      die = new Random(); //creates a random object
+      random1 = 0; //sets value of die to 0
+    }
+    public int roll()
+    {
+      random1 = die.nextInt(6) + 1; //when the die is "rolled" a random value is generated and set equal to random 1
+      return random1;
+    }
+  
+}
