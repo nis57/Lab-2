@@ -1,0 +1,95 @@
+import java.util.Scanner;
+
+public class Player
+{
+  
+      private String firstName, lastName;
+      private int numberOfRounds, roundsWon; 
+      private double money; 
+      
+      public Player(String firstName, String lastName, double money, int numberOfRounds, int roundsWon)
+        {
+          this. firstName = firstName;
+          this.lastName = lastName;
+          this.money = money;
+          this.numberOfRounds = numberOfRounds;
+          this.roundsWon = roundsWon;
+        }  //constructor for reading a player from a text file
+
+
+      public Player(String firstName, String lastName, double money)
+        {
+          this. firstName = firstName;
+          this.lastName = lastName;
+          this.money = money;
+          numberOfRounds = 0;
+          roundsWon = 0;
+        }  //constructor for reading in a new player 
+
+        public Player(){
+          firstName = "";
+          lastName = "";
+          money = 0;
+          numberOfRounds = 0;
+          roundsWon = 0;
+        } //default constructor
+
+      public String getFirstName()
+      {
+        return firstName; //returns the first name of the player
+      }
+
+      public String getLastName()
+      {
+        return lastName; //returns the last name of the player
+      }
+
+      public double getMoney()
+      {
+        return money; //returns the money the player has
+      }
+      public int getRoundsWon()
+      {
+        return roundsWon; //returns the number of rounds the player has won
+      }
+      public int getNumberOfRounds()
+      {
+        return numberOfRounds; //returns the number of rounds the player has played
+      }
+
+      public int roundWon()
+      {
+       numberOfRounds++; //when the player wins a round the number of rounds played increases by one  
+       roundsWon++;  //when the player wins a rounds roundsWon increases by one
+       return roundsWon; 
+      }
+      
+      public int roundLost()
+      {
+       numberOfRounds++; //when the player loses a round only the numberOfRounds increases
+       //roundsLost++;
+       return numberOfRounds;
+      }
+      
+      public double subtractMoney(double moneyBet)
+      {
+        money = money - moneyBet; //when the player loses the money s/he bet is subratced from their money
+        return money;
+      }
+      public double addMoney(double moneyBet)   
+      {
+        money = money + moneyBet; //when the player wins the moneyBet is added to their total money
+        return money;
+      } 
+      
+      public String toString()
+      {
+       StringBuilder playerInfo = new StringBuilder();
+       playerInfo.append("Name: " + firstName + " " + lastName);
+       playerInfo. append("\nTotal Rounds Played: " + numberOfRounds);
+       playerInfo.append("\nTotal Rounds Won: " + roundsWon);
+       playerInfo.append("\nTotal money: $" + money); //when printing the player informaiton this class is used to format the String
+       return playerInfo.toString();
+      }
+      
+    }
