@@ -1,0 +1,824 @@
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.geom.*;
+import java.awt.event.*;
+import java.util.*;
+import java.io.*;
+import java.awt.image.*;
+import javax.imageio.ImageIO;
+
+
+public class Assig5B 
+{
+    private final int NONE = 0, DRAW = 1, MODIFY = 2;  // State variables for the
+    					// canvas.  See more details below in class ShapePanel
+    private ShapePanel canvas;
+    private JPanel buttonPanel;
+    private JButton drawPoly, modifyPoints;  // Buttons to show in JFrame
+    private JLabel label;
+    private JFrame theFrame;
+    private ArrayList<MyPoly> shapeArray; 	// ArrayList of MyPoly objects
+    private MyPoly newShape;
+
+    private JMenuBar menuBar;	// for menu options
+    private JMenu fileMenu, editMenu;	// two menus will be used
+    private JMenuItem newFile, openFile, saveAs, saveAsJPG, endProgram, saveFile, starShape, houseShape;  	// 4 menu items will be used in this
+    private JMenuItem delItem, setColor, pushToBack;		// program
+    private int selectionIndex, startIndex;		// selectionIndex is index of current selected MyPoly
+										// startIndex is index where search within list of
+										// shapes will start
+    private String currFile;	// filename in which to save the scene
+    
+    public Assig5B()
+    {				// Initialize the GUI
+	canvas = new ShapePanel(800, 500);
+	shapeArray = new ArrayList<MyPoly>();
+	buttonPanel = new JPanel();
+	buttonPanel.setLayout(new GridLayout(1, 3));
+
+	drawPoly = new JButton("Draw");
+	modifyPoints = new JButton("Modify");
+	modifyPoints.setEnabled(false);
+
+	ButtonHandler bhandler = new ButtonHandler();
+	drawPoly.addActionListener(bhandler);
+	modifyPoints.addActionListener(bhandler);
+
+	buttonPanel.add(drawPoly);
+	buttonPanel.add(modifyPoints);
+	canvas.setMode(NONE);
+
+	label = new JLabel("");
+	label.setForeground(Color.BLUE);
+	label.setFont(new Font("TimesRoman", Font.BOLD, 14));
+	buttonPanel.add(label);
+
+	theFrame = new JFrame("CS 0401 Assignment 5");
+	canvas.setBackground(Color.white);
+	theFrame.add(canvas, BorderLayout.NORTH);
+	theFrame.add(buttonPanel, BorderLayout.SOUTH);
+
+	// Note that way the menus are set up here.  JMenuItem objects generated
+	// ActionEvents when clicked.  They are more or less just JButtons that happen
+	// to be located within a menu rather than showing directly in the display.
+	MenuHandler mhandler = new MenuHandler();
+	menuBar = new JMenuBar();
+	theFrame.setJMenuBar(menuBar);
+	fileMenu = new JMenu("File");
+	menuBar.add(fileMenu);
+	
+        saveFile = new JMenuItem("Save");
+	    endProgram = new JMenuItem("Exit");
+        newFile = new JMenuItem("New");
+        openFile = new JMenuItem("Open");
+        saveAs = new JMenuItem("Save As");
+        saveAsJPG = new JMenuItem("Save As JPG");
+        starShape = new JMenuItem("Insert Star");
+        houseShape = new JMenuItem("Insert House");
+        
+        fileMenu.add(newFile);
+        fileMenu.add(openFile);
+	    fileMenu.add(saveFile);
+        fileMenu.add(saveAs);
+        fileMenu.add(saveAsJPG);
+	    fileMenu.add(endProgram);
+        fileMenu.add(starShape);
+        fileMenu.add(houseShape);
+
+	
+        newFile.addActionListener(mhandler);
+        openFile.addActionListener(mhandler);
+        saveAs.addActionListener(mhandler);
+        saveAsJPG.addActionListener(mhandler);
+        saveFile.addActionListener(mhandler);
+	    endProgram.addActionListener(mhandler);
+        starShape.addActionListener(mhandler);
+        houseShape.addActionListener(mhandler);
+
+	editMenu = new JMenu("Edit");
+	menuBar.add(editMenu);
+	delItem = new JMenuItem("Delete");
+	setColor = new JMenuItem("Set Color");
+    pushToBack = new JMenuItem("Push to Back");
+	delItem.addActionListener(mhandler);
+	setColor.addActionListener(mhandler);
+    pushToBack.addActionListener(mhandler);
+	delItem.setEnabled(false);
+	setColor.setEnabled(false);
+    pushToBack.setEnabled(false);
+	editMenu.add(delItem);
+	editMenu.add(setColor);
+    editMenu.add(pushToBack);
+	currFile = null;
+
+	theFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+	theFrame.pack();
+	theFrame.setVisible(true);
+    }
+
+	// Handler for the buttons on the JFrame.  Note that both of these buttons "toggle"
+	// when clicked.  Note also the implications of clicking each one -- see what is set
+	// and then unset / reset upon a second click.
+    private class ButtonHandler implements ActionListener
+    {
+	public void actionPerformed(ActionEvent e)
+	{
+            if (e.getSource() == drawPoly)
+            {
+                if (canvas.currMode() != DRAW)
+		{
+                    canvas.setMode(DRAW);	// Set the canvas so that it will
+							// handle the actual drawing of the MyPoly.  This is because
+							// the MouseListener to respond to the clicks is within the
+							// ShapePanel class
+                    unSelect();
+                    label.setText("Click points to draw new Polygon");
+                    drawPoly.setText("Finish Draw");
+                    modifyPoints.setEnabled(false);
+                    delItem.setEnabled(false);
+                    setColor.setEnabled(false);
+                    canvas.repaint();
+		}
+		else
+		{
+                    canvas.setMode(NONE);	// Take canvas out of DRAW mode
+                    if (newShape != null)
+                    {
+			newShape.setHighlight(false);  // IMPLEMENT: setHighlight()
+			newShape = null;
+                        
+                    }
+                    drawPoly.setText("Draw");
+                    label.setText("");
+                    canvas.repaint();
+		}
+
+            }
+            else if (e.getSource() == modifyPoints)
+            {
+                if (canvas.currMode() != MODIFY)
+		{
+                    canvas.setMode(MODIFY);	// Set the canvas so that it will
+						// allow the user to edit the points within the selected
+						// MyPoly object. 
+                    label.setText("Click left to add point, right to remove");
+                    modifyPoints.setText("Quit Modify");
+                    drawPoly.setEnabled(false);
+                }
+                else
+                {
+                    canvas.setMode(NONE);	// Set mode back to NONE
+                    label.setText("");
+                    modifyPoints.setText("Modify");
+                    drawPoly.setEnabled(true);
+                }
+            }
+        }
+    }
+	
+    // Handler for the JMenuItems.  These options are all fairly straightforward.
+    private class MenuHandler implements ActionListener
+    {
+       
+        public void actionPerformed(ActionEvent e)
+            {
+        if (e.getSource() == delItem)
+        {
+                    deleteSelected();
+                    label.setText("Polygon has been deleted");
+                    canvas.setMode(NONE);
+                    modifyPoints.setEnabled(false);
+                    drawPoly.setEnabled(true);
+                    canvas.repaint();
+        }
+        else if (e.getSource() == setColor)
+        {
+                    Color newColor = JColorChooser.showDialog(theFrame,
+                     "Choose Color for Polygon",
+                    shapeArray.get(selectionIndex).getColor());  // IMPLEMENT: getColor()
+                    shapeArray.get(selectionIndex).setColor(newColor);  // IMPLEMENT: setColor()
+                    canvas.repaint();
+                }
+                else if (e.getSource() == pushToBack)
+                {
+                    
+                    Collections.swap(shapeArray, selectionIndex, 0);
+                    
+                    for (MyPoly shapeArray1 : shapeArray) 
+                    {
+                        System.out.println(shapeArray1);
+                    }
+                   
+                }
+                else if (e.getSource() == newFile)
+                {
+                    try{
+                           if(currFile == null) //if the file does not have a saved name
+                                {
+                                    int confirmation = JOptionPane.showConfirmDialog(theFrame, "Save Scene?", "Select an Option",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                                    if (confirmation == JOptionPane.YES_OPTION) //if they want to save the file
+                                    {
+                                     currFile = JOptionPane.showInputDialog(theFrame,"Enter file name");  
+                                     saveImages();
+                                    }
+                                }//end of if(currFile == null)
+
+                            if(currFile != null)  
+                            {  
+                                //if the file does have a name
+                                saveTempImages();
+
+                                String tempContent = new Scanner(new File("temp.txt")).useDelimiter("\\Z").next(); 
+                                //stores unsaved image on screen into one String
+                                String currContent = new Scanner(new File(currFile)).useDelimiter("\\Z").next();
+                                //stores saved txt file into on String
+
+                                boolean check = false;
+                                if(tempContent.equals(currContent) == true)
+                                {
+                                    //open a new scene without saving
+                                }
+                                else
+                                {
+                                    int confirmation = JOptionPane.showConfirmDialog(theFrame, "Save Scene?", "Select an Option",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                                    if (confirmation == JOptionPane.YES_OPTION) //if they want to save the file
+                                    {
+                                     saveImages();
+                                    } //saves changed scene                             
+                                }//if the current image is different
+                            }//end if currFile != null
+                                    shapeArray.clear();
+                                    canvas.repaint();//clears the screen of shapes
+                                    currFile = null; //the file has no name
+
+                        }//end of try
+                    catch(FileNotFoundException f)
+                    {
+                        JOptionPane.showMessageDialog(theFrame, "File Not Found");
+                    }//end of catch
+                    catch(Exception g)
+                    {
+                        JOptionPane.showMessageDialog(theFrame, "Something went wrong");
+                    }
+                   
+                }
+                else if (e.getSource() == openFile)
+                {
+                    try
+                    {   
+
+                        MyPoly mypoly;
+                        if(currFile == null)
+                        {
+                            int confirmation = JOptionPane.showConfirmDialog(theFrame, "Save Scene?", "Select an Option",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                            if (confirmation == JOptionPane.YES_OPTION) //if they want to save the file
+                            {
+                             currFile = JOptionPane.showInputDialog(theFrame,"Enter file name");  
+                             saveImages();
+                            }
+                            else if (confirmation == JOptionPane.NO_OPTION)
+                            {
+                                JOptionPane.showMessageDialog(theFrame, "No file was saved");
+
+                            }
+                          }//currFile == null
+                        else if(currFile != null)
+                        {  
+                            //if the file does have a name 
+
+                            saveTempImages();
+                            String tempContent = new Scanner(new File("temp.txt")).useDelimiter("\\Z").next(); 
+                            //stores unsaved image on screen into one String
+                            String currContent = new Scanner(new File(currFile)).useDelimiter("\\Z").next();
+                            //stores saved txt file into on String
+
+                            boolean check = false;
+                            if(tempContent.equals(currContent) == true)
+                            {
+                                //open a new scene without saving
+                            }
+                            else
+                            {
+                                int confirmation = JOptionPane.showConfirmDialog(theFrame, "Save Scene?", "Select an Option",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                                if (confirmation == JOptionPane.YES_OPTION) //if they want to save the file
+                                {
+                                 saveImages();
+                                } //saves changed scene                             
+                            }//if the current image is different
+                        }//end of currFile != null
+
+                                //beginning of mess that reads specified txt file
+                                String sFile = JOptionPane.showInputDialog(theFrame,"Enter the file name of the file you wish to open");
+                                File sF = new File(sFile);
+                                currFile = sFile; //changes the file name stored in currFile
+
+                                shapeArray.clear();
+                                canvas.repaint(); //clears the shapes on the screen
+
+                                if(sF.exists() && !sF.isDirectory()) //checks if file exists and is not a directory, if it exists it will scan info from txt file
+                                {
+                                    Scanner fScan = new Scanner(sF); //scans in text file
+
+                                     int npoly = fScan.nextInt(); //number of shapes
+                                     fScan.nextLine(); 
+
+                                    while(fScan.hasNext()) //while the file has more stuff
+                                    {                                   
+                                        String pLine = fScan.nextLine(); //reads in entire polygon line as one String
+
+                                        String[] polySplit = pLine.split("[|]");
+                                        String[] pointSplit = polySplit[0].split("(,)|(\\:)"); //splits at commas and colons
+                                        String[] colorSplit = polySplit[1].split(","); //splits the color text into single strings
+
+                                        int red = Integer.parseInt(colorSplit[0]);
+                                        int green = Integer.parseInt(colorSplit[1]);
+                                        int blue = Integer.parseInt(colorSplit[2]);
+                                        Color color = new Color(red, green, blue); //creates color from text file
+
+                                        int [] xpoints = new int[pointSplit.length];
+                                        int [] ypoints = new int[pointSplit.length];
+                                        int npoints = 0;
+                                        int j = 0;
+                                        for(int i = 0; i < pointSplit.length; i = i + 2)
+                                        {
+                                            String xString = pointSplit[i];
+                                            String yString = pointSplit[i + 1];
+
+                                            xpoints[j] = Integer.parseInt(xString);
+                                            ypoints[j] = Integer.parseInt(yString);
+
+                                            npoints++;
+                                            j++; //j keeps track of where the index of the xpoints/ypoints array is
+                                            //i keeps track where the index of the pointSplit array is
+                                        }
+                                        mypoly = new MyPoly(xpoints, ypoints, npoints, color);
+                                        mypoly.setHighlight(false);
+                                        addshape(mypoly);
+                                    }//end of fScan.hasnext loop
+                                 }//end of mess that reads specified text files                             
+                      
+
+                    }//end of try
+                    catch(FileNotFoundException f)
+                    {
+                        JOptionPane.showMessageDialog(theFrame, "File Not Found");
+                    }//end of catch
+                    catch(Exception g)
+                    {
+                        JOptionPane.showMessageDialog(theFrame, "Something went wrong");
+                    }
+                }//end of openFile
+
+        else if (e.getSource() == saveAs)
+        {
+            currFile = JOptionPane.showInputDialog(theFrame,"Enter file name");             
+            saveImages();
+        }
+        else if (e.getSource() == saveAsJPG)
+        {
+            sayClickTakeAPic(canvas);
+
+        }
+        else if (e.getSource() == saveFile) 
+        {
+            try{
+                    if (currFile == null)
+                    {
+                     currFile = JOptionPane.showInputDialog(theFrame,"Enter file name");
+                     saveImages();
+                    }
+
+                    saveTempImages();
+                    String tempContent = new Scanner(new File("temp.txt")).useDelimiter("\\Z").next(); 
+                    //stores unsaved image on screen into one String
+                    String currContent = new Scanner(new File(currFile)).useDelimiter("\\Z").next();
+                    //stores saved txt file into on String
+
+                    boolean check = false;
+                    if(tempContent.equals(currContent) == true)
+                    {
+                        //open a new scene without saving
+                    }
+                    else
+                    {
+                        int confirmation = JOptionPane.showConfirmDialog(theFrame, "Save your ugly shapes?", "Select an Option",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                        confirmation = JOptionPane.showConfirmDialog(theFrame, "You sure? The world's terrible enough as is", "Select an Option",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                        confirmation = JOptionPane.showConfirmDialog(theFrame, "God are you sure you wanna save this?", "Select an Option",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                        JOptionPane.showMessageDialog(theFrame, "*sighs*");
+                        if (confirmation == JOptionPane.YES_OPTION) //if they want to save the file
+                        {
+                         saveImages();
+                        } //saves changed scene                             
+                    }//if the current image is different
+                }//end of try
+            catch(FileNotFoundException f)
+            {
+                JOptionPane.showMessageDialog(theFrame, "File Not Found");
+            }//end of catch
+            catch(Exception g)
+            {
+                JOptionPane.showMessageDialog(theFrame, "Something went wrong");
+            }
+
+
+        }
+        else if (e.getSource() == endProgram)
+        {
+            try{
+                    if (currFile == null)
+                    {
+                        int confirmation = JOptionPane.showConfirmDialog(theFrame, "Save Scene?", "Select an Option",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                        if (confirmation == JOptionPane.YES_OPTION) //if they want to save the file
+                        {
+                         currFile = JOptionPane.showInputDialog(theFrame,"Enter file name");  
+                         saveImages();
+                        }     
+                        if (confirmation == JOptionPane.NO_OPTION) //if they want to save the file
+                        {
+                         System.exit(0);
+                        }               
+                    }
+
+                    saveTempImages();
+                    String tempContent = new Scanner(new File("temp.txt")).useDelimiter("\\Z").next(); 
+                    //stores unsaved image on screen into one String
+                    String currContent = new Scanner(new File(currFile)).useDelimiter("\\Z").next();
+                    //stores saved txt file into on String
+
+                    boolean check = false;
+                    if(tempContent.equals(currContent) == true)
+                    {
+                        //open a new scene without saving
+                    }
+                    else
+                    {
+                        int confirmation = JOptionPane.showConfirmDialog(theFrame, "Save your scene?", "Select an Option",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                        if (confirmation == JOptionPane.YES_OPTION) //if they want to save the file
+                        {
+                         saveImages();
+                        } //saves changed scene                             
+                    }//if the current image is different
+
+                    System.exit(0);
+                }
+                catch(Exception g)
+                {
+                        int confirmation = JOptionPane.showConfirmDialog(theFrame, "Something went wrong, close anyway?", "Select an Option",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                        if (confirmation == JOptionPane.YES_OPTION) //if they want to save the file
+                        {
+                         System.exit(0);
+                        } //saves changed scene      
+
+
+                }
+        }
+
+        else if(e.getSource() == starShape)
+        {
+            Color starColor = new Color(0,0,0);
+            int [] starX = new int[] {269, 310, 329, 346, 388, 360, 397, 338, 296, 310};
+            int [] starY = new int[] {214, 209, 167, 205, 206, 235, 262, 246, 274, 240};
+            int starNPoints = 10;
+            MyPoly star = new MyPoly(starX, starY, starNPoints, starColor); //creates the default star
+
+            addshape(star); //adds the star
+            
+        }
+        else if(e.getSource() == houseShape)
+        {
+            Color houseColor = new Color(0,0,0);
+            int [] houseX = new int[] {202, 202, 329, 318, 377, 260, 144};
+            int [] houseY = new int[] {233, 347, 343, 240, 233, 132, 241};
+            int houseNPoints = 7;
+            MyPoly house = new MyPoly(houseX, houseY, houseNPoints, houseColor); //creates the default house
+
+            addshape(house); //adds the house
+            
+        }
+
+
+            }
+    }
+
+    // Method to save the contents of the shapeArray into a text file.  This method depends
+    // upon the fileData() method in the MyPoly class.  See specifications of the fileData()
+    // method in the Assignment 5 sheet and in A5snap.htm.
+    public void saveImages()
+    {
+        try
+        {
+            PrintWriter P = new PrintWriter(new File(currFile));
+            P.println(shapeArray.size());
+            for (int i = 0; i < shapeArray.size(); i++)
+            {
+                P.println(shapeArray.get(i).fileData());	// IMPLEMENT: fileData()
+            }
+            P.close();
+        }
+        catch (Exception e)
+        { 
+            JOptionPane.showMessageDialog(theFrame, "I/O Problem - File not Saved");
+        }
+    }
+            private void sayClickTakeAPic(JPanel panel) 
+            {
+                BufferedImage img = new BufferedImage(panel.getWidth(), panel.getHeight(), BufferedImage.TYPE_INT_RGB);
+                panel.print(img.getGraphics()); // or: panel.printAll(...);
+                try
+                {
+                    
+                    String outputFile = JOptionPane.showInputDialog(theFrame,"Enter JPG Name, .jpg extension is automatically applied");
+                    int confirmation = JOptionPane.showConfirmDialog(theFrame, "Are you sure you want to save this as a JPG?", "Select an Option",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                    if (confirmation == JOptionPane.YES_OPTION) 
+                    {
+                        ImageIO.write(img, "jpg", new File(outputFile+".jpg"));
+                    }
+               
+                }
+                catch (IOException e) 
+                {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+     public void saveTempImages()
+    {
+        try
+        {
+            PrintWriter P = new PrintWriter(new File("temp.txt"));
+            P.println(shapeArray.size());
+            for (int i = 0; i < shapeArray.size(); i++)
+            {
+                P.println(shapeArray.get(i).fileData()); // IMPLEMENT: fileData()
+            }
+            P.close();
+        }
+        catch (Exception e)
+        { 
+            JOptionPane.showMessageDialog(theFrame, "I/O Problem - File not Saved");
+        }
+    }
+	
+    private void addshape(MyPoly newshape)
+    {
+        shapeArray.add(newshape);
+        canvas.repaint();
+    }
+	
+    // Method to select the MyPoly object located in location (x, y).  If more than one
+    // MyPoly encloses that point, this method will rotate through them in succession.
+    private int getSelected(int x, int y)
+    {
+        unSelect();
+        if (shapeArray.size() == 0) return -1;
+        int currInd = startIndex;
+        do
+        {
+            if (shapeArray.get(currInd).contains(x, y))  // OVERRIDE: contains().  The
+                            // contains() method in Polygon will work for any Polygon containing
+                            // 3 or more points.  However, it does not return true if the Polygon
+                            // contains only 1 or 2 points.  Your overridden version must handle
+                            // this issue.  This is non-trivial -- think about how you could do
+                            // this.  As a hint see the Point2D class.
+            {
+                System.out.println("it went in thats what she said");
+                startIndex = (currInd+1) % shapeArray.size();
+                shapeArray.get(currInd).setHighlight(true);  // highlight selected MyPoly.
+                            // When drawn, this will shown the individual points in the MyPoly and
+                            // its outline rather than the filled in shape.
+                return currInd;
+            }
+            currInd = (currInd+1)%shapeArray.size();
+        } while (currInd != startIndex);
+    return -1;
+    }
+
+    public boolean compareLines(String a, String b)
+    {
+        boolean match = false;
+        if(a.equals(b))
+        {
+            match = true;
+        }
+        return match;
+    }//end compareLines
+
+    public void deleteSelected()
+    {
+        if (selectionIndex >= 0)
+        {
+            shapeArray.remove(selectionIndex);
+            selectionIndex = -1;
+            System.out.println("delete" + selectionIndex);
+            if (startIndex >= shapeArray.size())
+                    startIndex = 0;
+        }
+    }
+
+    public void unSelect()
+    {
+        if (selectionIndex >= 0)
+        {
+            shapeArray.get(selectionIndex).setHighlight(false);
+            selectionIndex = -1;
+            System.out.println("unselect" + selectionIndex);
+        }
+    }
+
+    public static void main(String [] args)
+    {
+        new Assig5B();
+    }
+
+    // Class to do the "drawing" in this program.  See more comments below.
+    private class ShapePanel extends JPanel
+    {
+        private int prefwid, prefht;
+        private int x1, y1, x2, y2;    // used by mouse event handlers when drawing and
+                                           // moving the shapes
+
+        private int mode;	// Since reaction to mouse is different if we are creating
+                                                    // or moving or modifying a shape, we must keep track.
+
+        public ShapePanel (int pwid, int pht)
+        {		
+            selectionIndex = -1;
+            System.out.println("shape panel" + selectionIndex);
+            startIndex = 0;
+            prefwid = pwid;   // values used by getPreferredSize method below (which
+            prefht = pht;     // is called implicitly)
+            setOpaque(true);
+
+            MyMouser mListen = new MyMouser();  // Create listener for MouseEvents and
+            addMouseListener(mListen);			// MouseMotionEvents
+            addMouseMotionListener(mListen);      
+        }  // end of constructor
+
+        public void setMode(int newMode)	// Set mode
+        {
+            mode = newMode;
+        }
+
+        public int currMode()		// Return current mode
+        {
+            return mode;
+        }
+
+
+        public Dimension getPreferredSize()
+        {
+            return new Dimension(prefwid, prefht);
+        }
+
+        
+        public void paintComponent (Graphics g)	// Method to paint contents of panel
+        {
+            
+            super.paintComponent(g);  // super call needed here
+            Graphics2D g2d = (Graphics2D) g;
+            for (int i = 0; i < shapeArray.size(); i++)
+            {
+                shapeArray.get(i).draw(g2d);  // IMPLEMENT: draw().  This method will utilize
+                                    // the predefined Graphics2D methods draw() (for the outline only,
+                                    // when the object is first being drawn or it is selected by the user) 
+                                    // and fill() (for the filled in shape) for the "basic" Polygon
+                                    // but will require additional code to draw the enhancements added
+                                    // in MyPoly (ex: the circles indicating the points in the polygon
+                                    // and the color).  Also special cases for MyPoly objects with only
+                                    // 1 or 2 points must be handled as well. For some help with this see
+                                    // handout MyRectangle2D
+            }
+        }
+
+        // This class will handle the MouseEvents (both click and motion) for the panel.
+        // It extends MouseAdapter which trivially implements both MouseListener and
+        // MouseMotionListener.
+        private class MyMouser extends MouseAdapter
+        {
+            
+            public void mousePressed(MouseEvent e)
+            {
+                x1 = e.getX();  // store where mouse is when clicked
+                y1 = e.getY();
+
+                if (mode == NONE)
+                {
+                    selectionIndex = getSelected(x1, y1);  // find shape mouse is
+                    System.out.println(" none" + selectionIndex);
+                    if (selectionIndex >= 0)               // pointing to
+                    {
+                        modifyPoints.setEnabled(true);
+                        delItem.setEnabled(true);
+                        setColor.setEnabled(true);
+                        pushToBack.setEnabled(true);
+                        label.setText("Selected outline shown. Drag to move.");
+                        
+                    }
+                    else
+                    {
+                        modifyPoints.setEnabled(false);
+                        delItem.setEnabled(false);
+                        setColor.setEnabled(false);
+                        pushToBack.setEnabled(false);
+                        label.setText("");
+                    }
+                }
+            repaint();
+            }
+
+            
+            public void mouseClicked(MouseEvent e)
+            {
+                if (mode == DRAW)	// Draw the points in the new MyPoly
+                {
+                    if (newShape == null)	// For first point, new MyPoly must
+                    {						// be created.
+                        newShape = new MyPoly();
+                        newShape.setHighlight(true);
+                        addshape(newShape);
+                    }
+                    newShape.addPoint(x1, y1);	// OVERRIDE: addPoint()
+                }
+                else if (mode == MODIFY)	// Allow user to add or remove points from
+                                                // the current MyPoly
+                {
+                    MyPoly currPoly = shapeArray.get(selectionIndex);
+                    if (e.getButton() == 1)
+                    {
+                        currPoly = currPoly.insertPoint(x1, y1);
+                        // IMPLEMENT: insertPoint()
+                        
+                    }
+                    else if (e.getButton() == 3)
+                    {
+                        
+                        currPoly = currPoly.removePoint(x1, y1);
+                            // IMPLEMENT: removePoint()
+                           
+                    }
+                    if (currPoly != null)
+                        shapeArray.set(selectionIndex, currPoly);
+                    else	// No MyPoly left after deletion so remove it from list
+                    {
+                        deleteSelected();
+                        mode = NONE;
+                        drawPoly.setEnabled(true);
+                        delItem.setEnabled(false);
+                        modifyPoints.setEnabled(false);
+                        setColor.setEnabled(false);
+                        pushToBack.setEnabled(false);
+                        modifyPoints.setText("Modify");
+                        label.setText("");
+                    }
+                }
+                repaint();
+            }	
+           
+            public void mouseDragged(MouseEvent e)
+            {
+                
+                x2 = e.getX();
+                y2 = e.getY();
+                if (mode == NONE && selectionIndex >= 0)
+                {
+                    MyPoly currPoly = shapeArray.get(selectionIndex);
+                    int deltaX = (x2 - x1); 
+                    int deltaY = (y2 - y1); 
+					
+                    currPoly.translate(deltaX, deltaY);	// OVERRIDE: translate()
+                                    // The predefined translate() method will move a certain amount rather
+                                    // than moving to a specific location.  Thus we figure out how much to
+                                    // move based on the difference between the spot where the mouse used
+                                    // to be and where it is now.  However, since you are adding extra
+                                    // instance variables to your MyPoly class, you must also handle
+                                    // these in the translate() method, which is why you must override it.
+                    
+                    x1 = x2;
+                    y1 = y2;
+                    
+                    
+                }
+                repaint();
+                
+            }  
+
+  
+            public void mouseMoved(MouseEvent e)
+            {
+                if (mode ==MODIFY)
+                {
+                x1 = e.getX();  // store where mouse is when clicked
+                y1 = e.getY();
+                MyPoly temp;
+                for(int i = 0; i<shapeArray.size(); i++)
+                {
+                    temp = shapeArray.get(i);
+                    temp.glowingCircles(x1,y1);
+                }   
+                repaint();
+                }
+            }
+        } // end of MyMouser
+    } // end of ShapePanel
+}
