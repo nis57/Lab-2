@@ -1,0 +1,197 @@
+import java.util.Scanner; //used to scan information
+import java.util.Random;
+import java.io.File; //used to make files
+import java.io.PrintWriter; //used to import PrintWriter
+import java.io.IOException; //used to throw PrintWriter exception
+import java.util.ArrayList;
+import java.util.InputMismatchException;
+
+public class Assignment4
+{
+
+	public static void main(String[] args) throws IOException 
+	{
+
+		int guess = 0;
+		String question;
+		double attempts;
+		double correct;
+		int numAns = 0;
+		String[] choices;
+		int ans;
+		ArrayList <Question> quiz = new ArrayList <Question> ();
+		double totCorrect = 0;
+		double totWrong = 0;
+		double percentage = 0;
+		double lpct = 100.1;
+		double hpct = 0;
+		int hardestQuestion = 0;
+		int easiestQuestion = 0;
+		
+		System.out.println("");
+		System.out.println("Welcome to the Quiz Program! Good Luck!");//intro to program
+		System.out.println("");
+
+			String filename = "questions.txt";
+			File f = new File(filename);
+			Scanner qScan = new Scanner(f);//reads in text file with questions in it
+		
+
+			do{
+					question = qScan.nextLine();
+					numAns = qScan.nextInt();
+					qScan.nextLine();
+					choices = new String[numAns];//creates array for the question choices
+					for(int i = 0; i < numAns; i++)
+					{
+						choices[i] = qScan.nextLine();
+					}// loop reads in choices for each question into array that will be copied into an array in the object
+
+					ans = qScan.nextInt();
+					attempts = qScan.nextDouble();
+					correct = qScan.nextDouble();
+					qScan.nextLine();
+
+					Question q1 = new Question(question, numAns, choices, ans, attempts, correct); //creates a question
+					quiz.add(q1);//adds the question to the quiz arraylist
+
+
+			  }while(qScan.hasNext());//check to see if there is more questions to read
+			  //this do while loop is the section of the program that reads the question.txt and stores the information inside an object
+
+		for(int i = 0; i < quiz.size(); i++)//this for loop prints out the questions and asks the user for an ans
+		{
+
+			int guessLoop = 0;
+			System.out.println("Question " + i);
+			System.out.println(quiz.get(i).getQuestion());
+			System.out.println("Answers: ");
+			quiz.get(i).printChoices();	//prints the question and choices related to the question specified			
+
+				Scanner gScan = new Scanner(System.in);
+
+				while(guessLoop == 0)
+				{	
+					System.out.println("");
+					System.out.println("Your answer? (enter a number)");
+					guess = gScan.nextInt();
+
+
+						if(guess < quiz.get(i).getnumAns() && guess >= 0)
+						{
+							guessLoop = 1;//guess is  valid continues on with program
+							quiz.get(i).setGuess(guess); //updates the guess for this question
+							quiz.get(i).setAttempts();//increase number of attempts at this question by one
+						}
+						if(guess >= numAns || guess < 0)
+						{
+							guessLoop = 0;//guess invalid asks for input again
+						}
+					System.out.println("");
+				}//end of guess loop			
+
+		}//end of asking question for loop
+
+
+		System.out.println("Thanks for the answers!");
+		System.out.println("Here are your results:");
+		System.out.println("");
+
+		for(int i = 0; i < quiz.size(); i++)
+			{
+			System.out.println(quiz.get(i).getQuestion());
+			System.out.println("ans: " + quiz.get(i).getChoice(quiz.get(i).getAnswer()));
+			System.out.println("Player guess: " + quiz.get(i).getChoice(quiz.get(i).getGuess())); //check this later and make sure that choices[] doesn't need to be private in the Question class
+
+				if(quiz.get(i).getGuess() == quiz.get(i).getAnswer()) //if the users guess matches the ans
+				{
+					System.out.println("Result: CORRECT! Great Work!");
+					quiz.get(i).setCorrect();//increases the correct attempts for that quesiton by one
+					totCorrect++;
+				}
+
+				else if(quiz.get(i).getGuess() != quiz.get(i).getAnswer())//if the users guess does not match the ans
+				{
+					System.out.println("Result: INCORRECT! Remember the ans for next time!");
+					totWrong++;
+				}
+				System.out.println("");
+
+			}//end of result for loop	
+			
+		System.out.println("");
+		System.out.println("You overall performance was:");
+		System.out.println("");
+		System.out.println("Correct: " + totCorrect);//prints total correct user got during quiz
+		System.out.println("Incorrect: " + totWrong);//prints total wrong user got during quiz
+		System.out.println("percentage: " + totCorrect/(totWrong+totCorrect) ); //prints user score
+		System.out.println("");
+
+		System.out.println("Here are some cumulative statistics: ");
+		System.out.println("");
+
+		for(int i = 0; i < quiz.size(); i++)
+		{
+			percentage = (quiz.get(i).getCorrect()/quiz.get(i).getAttempt()) * 100;//percentage is the percentage of correct attempts at this question vs total attempts at this quesiton
+			System.out.println("Question: " + quiz.get(i).getQuestion());//prints question
+			System.out.println("Times tried: " + quiz.get(i).getAttempt());//prints number of attempts
+			System.out.println("Times correct: " + quiz.get(i).getCorrect());//prints correct attempts
+			System.out.print("Percent correct: " );//print percentage of hardest question
+			System.out.printf("%.2f", percentage);//prints percentage correct in proper format
+			System.out.println("%");;
+			System.out.println("");
+
+			if(percentage > hpct) //if the percentage for this question is greater than the current highest percentage then the current percentage is the new high percentage
+			{
+				hpct = percentage;
+				easiestQuestion = i; //stores this index in the array list as the hardest question
+			}
+			else if(percentage < lpct)//if the percentage for this question is less than the current lowest percentage then the current percentage is the new low percentage
+			{
+				lpct = percentage;
+				hardestQuestion = i; //stores this index in the array list as the easiest question
+			}
+			else
+			{}//nothing happens if it's not the biggest or the smallest
+
+		}
+
+		System.out.println("Easiest Question: ");
+		System.out.println(quiz.get(easiestQuestion).getQuestion());//prints easiest question
+		System.out.println("Times tried: " + quiz.get(easiestQuestion).getAttempt());//prints number of attempts of easiest question
+		System.out.println("Times correct: " + quiz.get(easiestQuestion).getCorrect());//prints number of correct attempts of easiest question
+		System.out.print("Percent correct: " );//print percentage of easiest quesetion
+		System.out.printf("%.2f", hpct);
+		System.out.println("%");//prints percentage correct in proper format
+		System.out.println("");
+
+		System.out.println("Hardest Question: ");
+		System.out.println(quiz.get(hardestQuestion).getQuestion());//prints hardest question
+		System.out.println("Times tried: " + quiz.get(hardestQuestion).getAttempt());//prints number of attempts of hardest question
+		System.out.println("Times correct: " + quiz.get(hardestQuestion).getCorrect());//prints number of correct attempts of hardest question
+		System.out.print("Percent correct: " );//print percentage of hardest quesetion
+		System.out.printf("%.2f", lpct); //prints percentage correct in proper format
+		System.out.println("%");
+		System.out.println("");
+
+
+
+		PrintWriter outputFile = new PrintWriter (filename); //replaces a question.txt with new file for updated quiz information
+			for(int i = 0; i < quiz.size(); i++)
+			{
+				outputFile.println(quiz.get(i).getQuestion()); //outputs question to file
+				outputFile.println(quiz.get(i).getnumAns());  //outputs number of answers to file
+				for(int j = 0; j < quiz.get(i).getnumAns(); j++) //outputs choices to each question to file
+					{
+						outputFile.println(quiz.get(i).getChoice(j));
+					}
+				outputFile.println(quiz.get(i).getAnswer()); //outputs answers into to file
+				outputFile.println(quiz.get(i).getAttempt()); //outputs number of attempts to file
+				outputFile.println(quiz.get(i).getCorrect()); //outputs number of correct attempts to file
+				
+			}//end of PrintWriter for loop
+			outputFile.close(); //closes file
+					 			//updates information before exiting program
+	}
+
+}
